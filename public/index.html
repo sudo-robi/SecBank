@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecBank — Secure Banking</title>
+<style>
+:root{
+  --bg:#0a0e17;--surface:#121826;--surface-2:#0f1623;--border:#1f2937;
+  --text:#e2e8f0;--muted:#94a3b8;--faint:#64748b;
+  --accent:#38bdf8;--accent-2:#818cf8;--success:#34d399;--warning:#fbbf24;--danger:#f87171;
+  --radius:16px;--shadow:0 10px 40px -12px rgba(0,0,0,.6);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(56,189,248,.10), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(129,140,248,.10), transparent 55%),
+    var(--bg);
+  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ---------- LOGIN ---------- */
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-split{display:grid;grid-template-columns:1.1fr .9fr;width:100%;max-width:960px;
+  background:var(--surface);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+.auth-brand{padding:48px;background:
+  radial-gradient(600px 400px at 0% 0%, rgba(56,189,248,.22), transparent 60%),
+  linear-gradient(160deg,#0b1220,#111c33);
+  display:flex;flex-direction:column;justify-content:space-between}
+.auth-brand .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700}
+.auth-brand .logo .mark{width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#06121f;font-weight:800}
+.auth-brand h2{font-size:30px;line-height:1.2;margin:36px 0 14px;font-weight:700}
+.auth-brand p{color:var(--muted);font-size:15px;line-height:1.6;max-width:380px}
+.auth-feats{margin-top:28px;display:flex;flex-direction:column;gap:14px}
+.auth-feats div{display:flex;align-items:center;gap:12px;color:var(--text);font-size:14px}
+.auth-feats .ck{width:22px;height:22px;border-radius:50%;background:rgba(52,211,153,.15);color:var(--success);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.auth-form{padding:48px;display:flex;flex-direction:column;justify-content:center}
+.auth-form h1{font-size:24px;margin-bottom:6px}
+.auth-form .sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px}
+
+/* ---------- APP LAYOUT ---------- */
+.layout{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.sidebar{background:rgba(18,24,38,.6);border-right:1px solid var(--border);padding:22px 16px;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;backdrop-filter:blur(8px)}
+.sidebar .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;padding:6px 8px 22px}
+.sidebar .logo .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;color:#06121f;font-weight:800}
+nav{display:flex;flex-direction:column;gap:6px}
+nav button{display:flex;align-items:center;gap:12px;background:transparent;color:var(--muted);
+  border:0;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14px;text-align:left;width:100%;transition:.15s}
+nav button:hover{background:var(--surface);color:var(--text)}
+nav button.active{background:linear-gradient(135deg,rgba(56,189,248,.16),rgba(129,140,248,.12));
+  color:#fff;box-shadow:inset 0 0 0 1px rgba(56,189,248,.35)}
+nav button .ic{width:20px;text-align:center;font-size:16px}
+.user-card{margin-top:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px}
+.user-card .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#06121f;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.user-card .meta{overflow:hidden}
+.user-card .meta .e{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-card .meta .r{font-size:11px;color:var(--faint)}
+
+.content{padding:28px 32px;max-width:1100px;width:100%}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.topbar h2{font-size:20px;font-weight:700}
+.topbar .right{display:flex;align-items:center;gap:12px}
+.page{display:none;animation:fade .35s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- CARDS ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h3{font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+/* ---------- FORMS ---------- */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:11px 13px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:14px;transition:.15s}
+.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+.btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#06121f;border:none;padding:11px 22px;
+  border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;transition:.15s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn.danger{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff}
+.transfer-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.transfer-form .full{grid-column:1/-1}
+@media(max-width:720px){.transfer-form{grid-template-columns:1fr}.auth-split{grid-template-columns:1fr}.auth-brand{display:none}.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.sidebar .logo{padding:0 12px 0 0}.user-card{margin:0 0 0 auto}}
+
+/* ---------- BADGES / ALERTS ---------- */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge.admin{background:rgba(129,140,248,.18);color:#c7d2fe}
+.badge.user{background:rgba(56,189,248,.16);color:#bae6fd}
+.badge.success{background:rgba(52,211,153,.16);color:#6ee7b7}
+.badge.pending{background:rgba(251,191,36,.16);color:#fde68a}
+.badge.critical{background:rgba(248,113,113,.18);color:#fecaca}
+.badge.warning{background:rgba(251,191,36,.16);color:#fde68a}
+.alert{padding:13px 16px;border-radius:10px;margin-bottom:14px;font-size:14px}
+.alert.error{background:rgba(248,113,113,.12);color:#fecaca;border:1px solid rgba(248,113,113,.3)}
+.alert.success{background:rgba(52,211,153,.12);color:#6ee7b7;border:1px solid rgba(52,211,153,.3)}
+
+/* ---------- TABLES ---------- */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--border)}
+th{color:var(--faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+tbody tr{transition:.15s}
+tbody tr:hover{background:var(--surface-2)}
+td{color:var(--text)}
+
+/* ---------- STATS ---------- */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.stat-card{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120px 80px at 100% 0,rgba(56,189,248,.10),transparent)}
+.stat-card .num{font-size:30px;font-weight:800;color:var(--accent);line-height:1}
+.stat-card .label{font-size:12px;color:var(--faint);margin-top:6px}
+
+/* ---------- ACCOUNTS ---------- */
+.account-row{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:14px;margin-bottom:10px;transition:.15s}
+.account-row:hover{border-color:rgba(56,189,248,.4)}
+.account-row .bal{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.account-row .id{font-size:11px;color:var(--faint);font-family:ui-monospace,monospace;margin-top:4px}
+.copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:6px;cursor:pointer;font-size:11px;margin-left:6px}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- TABS ---------- */
+.tab-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;background:var(--surface-2);padding:5px;border-radius:12px;border:1px solid var(--border);width:fit-content}
+.tab-bar button{background:transparent;border:0;color:var(--muted);padding:8px 15px;border-radius:9px;cursor:pointer;font-size:13px;transition:.15s}
+.tab-bar button.active{background:var(--surface);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.04)}
+.tab-content{display:none}
+.tab-content.active{display:block;animation:fade .3s ease}
+
+/* ---------- SECURITY ---------- */
+.chart-wrap{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:18px}
+.flag-card{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.flag-card .ft{display:flex;align-items:center;gap:12px}
+.flag-card .ft .ic{font-size:20px}
+.flag-card .detail{font-size:13px;color:var(--muted);margin-top:2px}
+.suspicious-empty{text-align:center;padding:40px;color:var(--success)}
+.suspicious-empty .ic{font-size:46px;margin-bottom:8px}
+.auto-refresh{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--faint);margin-bottom:14px}
+.auto-refresh input{accent-color:var(--accent)}
+@media(max-width:768px){.flag-card{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginPage">
+  <div class="auth-split">
+    <div class="auth-brand">
+      <div class="logo"><span class="mark">S</span> SecBank</div>
+      <div>
+        <h2>A banking backend built the way an auditor would review it.</h2>
+        <p>JWT auth, role-based access control, atomic transfers, and a full audit trail documented with a real threat model.</p>
+        <div class="auth-feats">
+          <div><span class="ck">✓</span> bcrypt password hashing (cost 12)</div>
+          <div><span class="ck">✓</span> Atomic, race-safe transfers</div>
+          <div><span class="ck">✓</span> 100% audit coverage on state changes</div>
+          <div><span class="ck">✓</span> Live threat monitoring</div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-form">
+      <div class="auth-box">
+        <h1>Welcome back</h1>
+        <p class="sub">Sign in to your secure dashboard</p>
+        <div id="loginAlert" class="alert" style="display:none"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@secbank.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" value="admin123"></div>
+        <button class="btn" style="width:100%" onclick="login()">Sign In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="mainApp" style="display:none">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo"><span class="mark">S</span> SecBank</div>
+      <nav id="navBar">
+        <button class="active" data-page="dashboard" onclick="showPage('dashboard')"><span class="ic">▦</span> Dashboard</button>
+        <button data-page="transfer" onclick="showPage('transfer')"><span class="ic">⇄</span> Transfer</button>
+        <button data-page="history" onclick="showPage('history')"><span class="ic">🕑</span> History</button>
+        <button id="adminNavBtn" data-page="admin" style="display:none" onclick="showPage('admin')"><span class="ic">⚙</span> Admin</button>
+      </nav>
+      <div class="user-card">
+        <div class="av" id="userInitials">A</div>
+        <div class="meta">
+          <div class="e" id="userEmail">—</div>
+          <div class="r" id="userRole">—</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="right">
+          <span id="userBadge"></span>
+          <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+        </div>
+      </div>
+
+      <div class="page active" id="page-dashboard">
+        <div class="card"><h3><span class="dot"></span> Your Accounts</h3><div id="accountsList"></div></div>
+      </div>
+
+      <div class="page" id="page-transfer">
+        <div class="card">
+          <h3><span class="dot"></span> Send Money</h3>
+          <div id="transferAlert" class="alert" style="display:none"></div>
+          <div class="transfer-form">
+            <div class="form-group"><label>From Account</label><select id="transferFrom"></select></div>
+            <div class="form-group"><label>To Account ID</label><input type="text" id="transferTo" placeholder="Destination account ID"></div>
+            <div class="form-group"><label>Amount (USD)</label><input type="number" id="transferAmount" step="0.01" min="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="transferDesc" placeholder="Optional memo"></div>
+            <div class="full"><button class="btn" onclick="transfer()">Send Transfer</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-history">
+        <div class="card"><h3><span class="dot"></span> Transaction History</h3><div id="historyList"><p style="color:var(--faint)">No transactions yet.</p></div></div>
+      </div>
+
+      <div class="page" id="page-admin">
+        <div class="tab-bar">
+          <button class="active" data-tab="admin-stats" onclick="showAdminTab('admin-stats')">Overview</button>
+          <button data-tab="admin-users" onclick="showAdminTab('admin-users')">Accounts</button>
+          <button data-tab="admin-transactions" onclick="showAdminTab('admin-transactions')">Transactions</button>
+          <button data-tab="admin-audit" onclick="showAdminTab('admin-audit')">Audit Logs</button>
+          <button data-tab="admin-security" onclick="showAdminTab('admin-security')">Security</button>
+        </div>
+
+        <div class="tab-content active" id="tab-admin-stats">
+          <div class="card"><h3><span class="dot"></span> System Overview</h3><div class="stats-grid" id="statsGrid"></div></div>
+        </div>
+        <div class="tab-content" id="tab-admin-users">
+          <div class="card"><h3><span class="dot"></span> All Accounts</h3><div id="adminAccountsList"></div></div>
+        </div>
+        <div class="tab-content" id="tab-admin-transactions">
+          <div class="card"><h3><span class="dot"></span> All Transactions</h3><div id="adminTxList"></div></div>
+        </div>
+        <div class="tab-content" id="tab-admin-audit">
+          <div class="card"><h3><span class="dot"></span> Audit Logs</h3><div id="adminAuditList"></div></div>
+        </div>
+
+        <div class="tab-content" id="tab-admin-security">
+          <div class="card">
+            <h3><span class="dot"></span> Failed Login Attempts (24h)</h3>
+            <div class="stats-grid" id="failedLoginStats" style="margin-bottom:16px"></div>
+            <div class="chart-wrap"><canvas id="failedLoginChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h3><span class="dot"></span> Suspicious Activity</h3>
+            <div id="suspiciousActivity"><p style="color:var(--faint)">Scanning for threats...</p></div>
+          </div>
+          <div class="card">
+            <h3><span class="dot"></span> Active Sessions</h3>
+            <div id="activeSessions"><p style="color:var(--faint)">Loading...</p></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 style="margin:0"><span class="dot"></span> Live Audit Feed</h3>
+              <label class="auto-refresh"><input type="checkbox" id="auditAutoRefresh" checked onchange="toggleAuditRefresh()"> Auto-refresh (10s)</label>
+            </div>
+            <div id="liveAuditFeed" style="margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = null;
+let user = null;
+let auditRefreshInterval = null;
+const PAGE_TITLES = { dashboard:'Dashboard', transfer:'Send Money', history:'Transaction History', admin:'Admin Console' };
+
+function showAlert(el, msg, type) { el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; }
+function hideAlert(el) { el.style.display = 'none'; }
+
+async function api(method, path, body) {
+  const opts = { method, headers: {} };
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.error || 'Request failed');
+  return data;
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const alertEl = document.getElementById('loginAlert');
+  hideAlert(alertEl);
+  try {
+    const res = await api('POST', '/login', { email, password });
+    token = res.accessToken; user = res.user;
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userRole').textContent = user.role;
+    document.getElementById('userInitials').textContent = user.email[0].toUpperCase();
+    document.getElementById('userBadge').innerHTML = `<span class="badge ${user.role.toLowerCase()}">${user.role}</span>`;
+    if (user.role === 'ADMIN') document.getElementById('adminNavBtn').style.display = 'flex';
+    await loadDashboard();
+  } catch (e) { showAlert(alertEl, e.message, 'error'); }
+}
+
+function logout() {
+  stopAuditRefresh();
+  token = null; user = null;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('adminNavBtn').style.display = 'none';
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`nav button[data-page="${name}"]`).classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[name] || '';
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'transfer') loadTransfer();
+  if (name === 'history') loadHistory();
+  if (name === 'admin') loadAdmin();
+}
+
+function showAdminTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector(`.tab-bar button[data-tab="${name}"]`).classList.add('active');
+  if (name === 'admin-stats') loadAdminStats();
+  if (name === 'admin-users') loadAdminUsers();
+  if (name === 'admin-transactions') loadAdminTransactions();
+  if (name === 'admin-audit') loadAdminAudit();
+  if (name === 'admin-security') loadSecurityTab();
+}
+
+async function loadDashboard() {
+  try {
+    const accounts = await api('GET', '/accounts');
+    const el = document.getElementById('accountsList');
+    if (accounts.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No accounts yet.</p>'; return; }
+    el.innerHTML = accounts.map(a => `
+      <div class="account-row">
+        <div>
+          <div class="bal">$${parseFloat(a.balance).toFixed(2)}</div>
+          <div class="id">${a.id} <button class="copy-btn" onclick="navigator.clipboard.writeText('${a.id}')">Copy</button></div>
+        </div>
+        <span style="color:var(--muted);font-size:13px">${a.currency}</span>
+      </div>`).join('');
+  } catch (e) { document.getElementById('accountsList').innerHTML = `<div class="alert error">${e.message}</div>`; }
+}
+
+async function loadTransfer() {
+  try {
+    const accounts = await api('GET', '/accounts');
+    document.getElementById('transferFrom').innerHTML = accounts.map(a =>
+      `<option value="${a.id}">${a.id.slice(0,8)}… — $${parseFloat(a.balance).toFixed(2)}</option>`).join('');
+  } catch (e) {}
+}
+
+async function transfer() {
+  const alertEl = document.getElementById('transferAlert');
+  hideAlert(alertEl);
+  try {
+    const res = await api('POST', '/transactions/transfer', {
+      sourceAccountId: document.getElementById('transferFrom').value,
+      destinationAccountId: document.getElementById('transferTo').value,
+      amount: parseFloat(document.getElementById('transferAmount').value),
+      description: document.getElementById('transferDesc').value || undefined,
+    });
+    showAlert(alertEl, `Transferred $${parseFloat(res.amount).toFixed(2)} successfully.`, 'success');
+    document.getElementById('transferTo').value = '';
+    document.getElementById('transferAmount').value = '';
+    document.getElementById('transferDesc').value = '';
+    loadDashboard();
+  } catch (e) { showAlert(alertEl, e.message, 'error'); }
+}
+
+async function loadHistory() {
+  try {
+    const res = await api('GET', '/transactions');
+    const el = document.getElementById('historyList');
+    if (res.transactions.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No transactions yet.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Date</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>${res.transactions.map(t => `<tr>
+        <td style="color:var(--faint)">${new Date(t.createdAt).toLocaleString()}</td>
+        <td><span class="badge ${t.type === 'TRANSFER_IN' ? 'success' : 'pending'}">${t.type === 'TRANSFER_IN' ? 'IN' : 'OUT'}</span></td>
+        <td style="font-family:ui-monospace,monospace;color:var(--muted)">${t.sourceAccountId.slice(0,8)}…</td>
+        <td style="font-family:ui-monospace,monospace;color:var(--muted)">${t.destinationAccountId.slice(0,8)}…</td>
+        <td style="font-weight:700">$${parseFloat(t.amount).toFixed(2)}</td>
+        <td><span class="badge success">${t.status}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) { document.getElementById('historyList').innerHTML = `<div class="alert error">${e.message}</div>`; }
+}
+
+function loadAdmin() { loadAdminStats(); loadAdminUsers(); loadAdminTransactions(); loadAdminAudit(); }
+
+async function loadAdminStats() {
+  try {
+    const d = await api('GET', '/admin/dashboard');
+    document.getElementById('statsGrid').innerHTML = Object.entries(d.stats).map(([k,v]) =>
+      `<div class="stat-card"><div class="num">${v}</div><div class="label">${k}</div></div>`).join('');
+  } catch (e) {}
+}
+
+async function loadAdminUsers() {
+  try {
+    const res = await api('GET', '/admin/accounts');
+    const el = document.getElementById('adminAccountsList');
+    if (res.accounts.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No accounts.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>User</th><th>Email</th><th>Balance</th><th>Account</th></tr></thead>
+      <tbody>${res.accounts.map(a => `<tr>
+        <td>${a.user.name}</td><td style="color:var(--muted)">${a.user.email}</td>
+        <td style="font-weight:700">$${parseFloat(a.balance).toFixed(2)}</td>
+        <td style="font-family:ui-monospace,monospace;color:var(--faint)">${a.id.slice(0,12)}…</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) {}
+}
+
+async function loadAdminTransactions() {
+  try {
+    const res = await api('GET', '/admin/transactions');
+    const el = document.getElementById('adminTxList');
+    if (res.transactions.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No transactions.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>${res.transactions.slice(0,20).map(t => `<tr>
+        <td style="color:var(--faint)">${new Date(t.createdAt).toLocaleString()}</td>
+        <td style="color:var(--muted)">${t.sourceAccount.user?.name || '?'}</td>
+        <td style="color:var(--muted)">${t.destinationAccount.user?.name || '?'}</td>
+        <td style="font-weight:700">$${parseFloat(t.amount).toFixed(2)}</td>
+        <td><span class="badge success">${t.status}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) {}
+}
+
+async function loadAdminAudit() {
+  try {
+    const res = await api('GET', '/admin/audit-logs');
+    const el = document.getElementById('adminAuditList');
+    if (res.logs.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No audit logs yet.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>IP</th></tr></thead>
+      <tbody>${res.logs.slice(0,20).map(l => `<tr>
+        <td style="color:var(--faint)">${new Date(l.createdAt).toLocaleString()}</td>
+        <td>${l.user.email}</td>
+        <td><span class="badge pending" style="background:rgba(56,189,248,.16);color:#bae6fd">${l.action}</span></td>
+        <td style="color:var(--muted)">${l.resource}</td>
+        <td style="font-family:ui-monospace,monospace;color:var(--faint)">${l.ipAddress || '-'}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) {}
+}
+
+// ===== SECURITY TAB =====
+async function loadSecurityTab() {
+  await Promise.all([loadFailedLogins(), loadSuspiciousActivity(), loadActiveSessions(), loadLiveAudit()]);
+  startAuditRefresh();
+}
+
+async function loadFailedLogins() {
+  try {
+    const stats = await api('GET', '/admin/security/failed-logins');
+    document.getElementById('failedLoginStats').innerHTML = `
+      <div class="stat-card"><div class="num">${stats.total}</div><div class="label">Failed Attempts (24h)</div></div>
+      <div class="stat-card"><div class="num">${stats.byIp.length}</div><div class="label">Unique IPs</div></div>
+      <div class="stat-card"><div class="num">${stats.byEmail.length}</div><div class="label">Targeted Emails</div></div>`;
+    drawFailedLoginChart(stats.hourly);
+  } catch (e) {}
+}
+
+function drawFailedLoginChart(hourlyData) {
+  const canvas = document.getElementById('failedLoginChart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = 200 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 200;
+  const PAD = { top: 12, bottom: 28, left: 36, right: 8 };
+  const chartW = W - PAD.left - PAD.right, chartH = H - PAD.top - PAD.bottom;
+  ctx.clearRect(0, 0, W, H);
+  const data = hourlyData || [];
+  if (data.length === 0) {
+    ctx.fillStyle = '#64748b'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('No failed login attempts in the last 24 hours', W/2, H/2); return;
+  }
+  const maxVal = Math.max(...data.map(d => d.count), 1);
+  const barW = Math.max(4, Math.min(34, chartW / data.length - 4));
+  const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + chartH);
+  grad.addColorStop(0, '#38bdf8'); grad.addColorStop(1, '#818cf8');
+  data.forEach((d, i) => {
+    const x = PAD.left + (chartW / data.length) * i + (chartW / data.length - barW) / 2;
+    const barH = (d.count / maxVal) * chartH;
+    const y = PAD.top + chartH - barH;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, 4);
+    ctx.fill();
+    ctx.fillStyle = '#64748b'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(d.hour.slice(11, 16), x + barW/2, H - PAD.bottom + 14);
+    if (d.count > 0) { ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.fillText(d.count, x + barW/2, y - 4); }
+  });
+}
+
+async function loadSuspiciousActivity() {
+  try {
+    const flags = await api('GET', '/admin/security/suspicious');
+    const el = document.getElementById('suspiciousActivity');
+    const all = [...(flags.rapidTransfers || []), ...(flags.bruteForceIps || []), ...(flags.bruteForceEmails || [])];
+    if (all.length === 0) {
+      el.innerHTML = '<div class="suspicious-empty"><div class="ic">✓</div><p style="font-size:16px;font-weight:600">No suspicious activity detected</p><p style="color:var(--faint);font-size:13px;margin-top:4px">All systems nominal</p></div>';
+      return;
+    }
+    el.innerHTML = all.map(f => {
+      const crit = f.type === 'BRUTE_FORCE_IP';
+      return `<div class="flag-card">
+        <div class="ft"><span class="ic">${crit ? '⚠' : '⚠'}</span>
+          <div><strong style="font-size:14px">${f.type.replace(/_/g,' ')}</strong><div class="detail">${f.detail}</div></div></div>
+        <span class="badge ${crit ? 'critical' : 'warning'}">${f.count} hits</span></div>`;
+    }).join('');
+  } catch (e) {}
+}
+
+async function loadActiveSessions() {
+  try {
+    const sessions = await api('GET', '/admin/security/sessions');
+    const el = document.getElementById('activeSessions');
+    if (sessions.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No active sessions.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Created</th><th>Expires</th><th>IP</th><th>User Agent</th></tr></thead>
+      <tbody>${sessions.map(s => `<tr>
+        <td style="color:var(--faint)">${new Date(s.createdAt).toLocaleString()}</td>
+        <td style="color:var(--faint)">${new Date(s.expiresAt).toLocaleString()}</td>
+        <td style="font-family:ui-monospace,monospace">${s.ipAddress || '-'}</td>
+        <td style="color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.userAgent || '-'}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) {}
+}
+
+async function loadLiveAudit() {
+  try {
+    const res = await api('GET', '/admin/security/audit-log');
+    const el = document.getElementById('liveAuditFeed');
+    if (res.logs.length === 0) { el.innerHTML = '<p style="color:var(--faint)">No audit entries yet.</p>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>IP</th></tr></thead>
+      <tbody>${res.logs.slice(0,30).map(l => `<tr>
+        <td style="color:var(--faint)">${new Date(l.createdAt).toLocaleString()}</td>
+        <td>${l.user.email}</td>
+        <td><span class="badge pending" style="background:rgba(56,189,248,.16);color:#bae6fd">${l.action}</span></td>
+        <td style="color:var(--muted)">${l.resource}</td>
+        <td style="font-family:ui-monospace,monospace;color:var(--faint)">${l.ipAddress || '-'}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch (e) {}
+}
+
+function toggleAuditRefresh() {
+  if (document.getElementById('auditAutoRefresh').checked) startAuditRefresh(); else stopAuditRefresh();
+}
+function startAuditRefresh() { stopAuditRefresh(); auditRefreshInterval = setInterval(loadLiveAudit, 10000); }
+function stopAuditRefresh() { if (auditRefreshInterval) { clearInterval(auditRefreshInterval); auditRefreshInterval = null; } }
+</script>
+</body>
+</html>
