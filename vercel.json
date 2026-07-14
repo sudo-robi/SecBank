@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "prisma generate && tsc",
+  "buildCommand": "npm run build",
   "functions": {
     "api/index.ts": {
       "includeFiles": "public/**"

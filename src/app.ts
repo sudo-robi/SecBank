@@ -2,9 +2,6 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
-import fastifyStatic from "@fastify/static";
-import path from "path";
-import fs from "fs";
 import { env } from "./config/env";
 import { authRoutes } from "./routes/auth";
 import { accountRoutes } from "./routes/accounts";
@@ -52,18 +49,13 @@ export async function buildApp() {
     routePrefix: "/docs",
   });
 
-  const publicCandidates = [
-    path.join(__dirname, "..", "public"),
-    path.join(__dirname, "public"),
-    path.join(process.cwd(), "public"),
-  ];
-  const publicDir = publicCandidates.find((dir) => fs.existsSync(dir));
-  if (publicDir) {
-    await app.register(fastifyStatic, {
-      root: publicDir,
-      prefix: "/",
-    });
-  }
+  app.get("/", async () => {
+    return {
+      name: "SecBank API",
+      version: "1.0.0",
+      docs: "/docs",
+    };
+  });
 
   await app.register(authRoutes);
   await app.register(accountRoutes);
