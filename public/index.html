@@ -86,6 +86,12 @@ nav button .ic{width:20px;text-align:center;font-size:16px}
   border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;transition:.15s}
 .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .btn.danger{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff}
+.auth-switch{margin-top:18px;display:flex;gap:10px;align-items:center;justify-content:center;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.auth-switch a{color:var(--accent);text-decoration:none;font-weight:600}
+.auth-switch a:hover{text-decoration:underline}
+.auth-switch span{color:var(--faint)}
+.auth-box h1{font-size:22px;margin-bottom:4px}
+.auth-box .auth-token{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:8px;color:var(--accent)}
 .transfer-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .transfer-form .full{grid-column:1/-1}
 @media(max-width:720px){.transfer-form{grid-template-columns:1fr}.auth-split{grid-template-columns:1fr}.auth-brand{display:none}.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.sidebar .logo{padding:0 12px 0 0}.user-card{margin:0 0 0 auto}}
@@ -164,16 +170,64 @@ td{color:var(--text)}
         </div>
       </div>
     </div>
-    <div class="auth-form">
-      <div class="auth-box">
-        <h1>Welcome back</h1>
-        <p class="sub">Sign in to your secure dashboard</p>
-        <div id="loginAlert" class="alert" style="display:none"></div>
-        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@secbank.com"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" value="admin123"></div>
-        <button class="btn" style="width:100%" onclick="login()">Sign In</button>
+      <div class="auth-form">
+        <div class="auth-box">
+          <!-- LOGIN -->
+          <div id="view-login">
+            <h1>Welcome back</h1>
+            <p class="sub">Sign in to your secure dashboard</p>
+            <div id="loginAlert" class="alert" style="display:none"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@secbank.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" value="admin123"></div>
+            <button class="btn" style="width:100%" onclick="login()">Sign In</button>
+            <div class="auth-switch">
+              <a href="#" onclick="showAuthView('forgot');return false;">Forgot password?</a>
+              <span>·</span>
+              <a href="#" onclick="showAuthView('register');return false;">Create account</a>
+            </div>
+          </div>
+
+          <!-- REGISTER -->
+          <div id="view-register" style="display:none">
+            <h1>Create your account</h1>
+            <p class="sub">Sign up for secure banking</p>
+            <div id="registerAlert" class="alert" style="display:none"></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Doe"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="At least 8 characters"></div>
+            <button class="btn" style="width:100%" onclick="registerAccount()">Create account</button>
+            <div class="auth-switch">
+              <a href="#" onclick="showAuthView('login');return false;">← Back to sign in</a>
+            </div>
+          </div>
+
+          <!-- FORGOT PASSWORD -->
+          <div id="view-forgot" style="display:none">
+            <h1>Reset password</h1>
+            <p class="sub">Enter your email to get a reset link</p>
+            <div id="forgotAlert" class="alert" style="display:none"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="you@example.com"></div>
+            <button class="btn" style="width:100%" onclick="requestReset()">Send reset link</button>
+            <div class="auth-switch">
+              <a href="#" onclick="showAuthView('login');return false;">← Back to sign in</a>
+            </div>
+          </div>
+
+          <!-- RESET PASSWORD -->
+          <div id="view-reset" style="display:none">
+            <h1>Choose new password</h1>
+            <p class="sub">Paste the reset token and set a new password</p>
+            <div id="resetAlert" class="alert" style="display:none"></div>
+            <div class="form-group"><label>Reset Token</label><input type="text" id="resetToken" placeholder="Paste token from reset link"></div>
+            <div class="form-group"><label>New Password</label><input type="password" id="resetPassword" placeholder="At least 8 characters"></div>
+            <div class="form-group"><label>Confirm Password</label><input type="password" id="resetConfirm" placeholder="Repeat new password"></div>
+            <button class="btn" style="width:100%" onclick="doReset()">Update password</button>
+            <div class="auth-switch">
+              <a href="#" onclick="showAuthView('login');return false;">← Back to sign in</a>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
   </div>
 </div>
 
@@ -322,6 +376,61 @@ function logout() {
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('adminNavBtn').style.display = 'none';
+}
+
+function showAuthView(view) {
+  ['login', 'register', 'forgot', 'reset'].forEach(v => {
+    document.getElementById('view-' + v).style.display = (v === view) ? 'block' : 'none';
+  });
+  ['loginAlert', 'registerAlert', 'forgotAlert', 'resetAlert'].forEach(id => hideAlert(document.getElementById(id)));
+}
+
+async function registerAccount() {
+  const alertEl = document.getElementById('registerAlert');
+  hideAlert(alertEl);
+  try {
+    await api('POST', '/register', {
+      name: document.getElementById('regName').value,
+      email: document.getElementById('regEmail').value,
+      password: document.getElementById('regPassword').value,
+    });
+    showAlert(alertEl, 'Account created! Please sign in.', 'success');
+    document.getElementById('loginEmail').value = document.getElementById('regEmail').value;
+    setTimeout(() => showAuthView('login'), 1200);
+  } catch (e) { showAlert(alertEl, e.message, 'error'); }
+}
+
+async function requestReset() {
+  const alertEl = document.getElementById('forgotAlert');
+  hideAlert(alertEl);
+  try {
+    const res = await api('POST', '/forgot-password', { email: document.getElementById('forgotEmail').value });
+    if (res.resetToken) {
+      document.getElementById('resetToken').value = res.resetToken;
+      const ra = document.getElementById('resetAlert');
+      ra.innerHTML = 'Reset token generated (normally emailed):<div class="auth-token">' + res.resetToken + '</div>Paste it below with your new password.';
+      ra.className = 'alert success'; ra.style.display = 'block';
+      showAuthView('reset');
+    } else {
+      showAlert(alertEl, res.message || 'If an account exists, a reset link has been sent.', 'success');
+    }
+  } catch (e) { showAlert(alertEl, e.message, 'error'); }
+}
+
+async function doReset() {
+  const alertEl = document.getElementById('resetAlert');
+  hideAlert(alertEl);
+  const pw = document.getElementById('resetPassword').value;
+  const confirm = document.getElementById('resetConfirm').value;
+  if (pw !== confirm) { showAlert(alertEl, 'Passwords do not match', 'error'); return; }
+  try {
+    const res = await api('POST', '/reset-password', {
+      token: document.getElementById('resetToken').value,
+      password: pw,
+    });
+    showAlert(alertEl, res.message || 'Password updated.', 'success');
+    setTimeout(() => showAuthView('login'), 1500);
+  } catch (e) { showAlert(alertEl, e.message, 'error'); }
 }
 
 function showPage(name) {

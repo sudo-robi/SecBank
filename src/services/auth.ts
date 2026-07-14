@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
+import type { JwtPayload } from "../types";
 import { hashPassword, verifyPassword } from "../lib/password";
-import { signAccessToken, signRefreshToken, hashToken, verifyToken } from "../lib/jwt";
+import { signAccessToken, signRefreshToken, hashToken, verifyToken, signResetToken, verifyResetToken } from "../lib/jwt";
 import { UnauthorizedError, ConflictError } from "../lib/errors";
 
 export async function registerUser(email: string, password: string, name: string) {
@@ -78,6 +79,52 @@ export async function refreshAccessToken(refreshToken: string) {
   return {
     accessToken: signAccessToken(newPayload),
   };
+}
+
+export async function forgotPassword(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Always return a generic message to avoid account enumeration.
+  // In production this token would be emailed; this demo returns it so the
+  // client can complete the flow without a mail server.
+  if (!user) {
+    return { message: "If an account exists, a password reset link has been sent." };
+  }
+
+  const resetToken = signResetToken({
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  return {
+    message: "If an account exists, a password reset link has been sent.",
+    resetToken,
+  };
+}
+
+export async function resetPassword(token: string, password: string) {
+  let payload: JwtPayload;
+  try {
+    payload = verifyResetToken(token);
+  } catch {
+    throw new UnauthorizedError("Invalid or expired reset token");
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  await prisma.user.update({
+    where: { id: payload.sub },
+    data: { passwordHash },
+  });
+
+  // Revoke all active sessions so a stolen password can't be reused.
+  await prisma.session.updateMany({
+    where: { userId: payload.sub, isRevoked: false },
+    data: { isRevoked: true, revokedAt: new Date() },
+  });
+
+  return { message: "Password updated successfully." };
 }
 
 export async function revokeSession(refreshToken: string) {

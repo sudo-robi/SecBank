@@ -22,3 +22,21 @@ export function signRefreshToken(payload: JwtPayload): string {
 export function verifyToken(token: string): JwtPayload {
   return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 }
+
+export function signResetToken(payload: JwtPayload): string {
+  return jwt.sign(
+    { ...payload, purpose: "password-reset" },
+    env.JWT_SECRET,
+    { expiresIn: "1h" } as jwt.SignOptions,
+  );
+}
+
+export function verifyResetToken(token: string): JwtPayload {
+  const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload & {
+    purpose?: string;
+  };
+  if (decoded.purpose !== "password-reset") {
+    throw new Error("Invalid reset token");
+  }
+  return decoded;
+}

@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { registerUser, loginUser, refreshAccessToken } from "../services/auth";
-import { registerSchema, loginSchema } from "../schemas";
+import { registerUser, loginUser, refreshAccessToken, forgotPassword as forgotPasswordService, resetPassword as resetPasswordService } from "../services/auth";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "../schemas";
 
 export async function register(request: FastifyRequest, reply: FastifyReply) {
   const body = registerSchema.parse(request.body);
@@ -30,4 +30,16 @@ export async function refresh(request: FastifyRequest, reply: FastifyReply) {
 
 export async function me(request: FastifyRequest, reply: FastifyReply) {
   return reply.send(request.user);
+}
+
+export async function forgotPassword(request: FastifyRequest, reply: FastifyReply) {
+  const body = forgotPasswordSchema.parse(request.body);
+  const result = await forgotPasswordService(body.email);
+  return reply.send(result);
+}
+
+export async function resetPassword(request: FastifyRequest, reply: FastifyReply) {
+  const body = resetPasswordSchema.parse(request.body);
+  const result = await resetPasswordService(body.token, body.password);
+  return reply.send(result);
 }
