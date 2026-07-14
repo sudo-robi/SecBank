@@ -2,8 +2,11 @@
 
 [![CI](https://github.com/sudo-robi/SecBank/workflows/CI/badge.svg)](https://github.com/sudo-robi/SecBank/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/sudo-robi/SecBank.svg)](https://github.com/sudo-robi/SecBank/blob/main/LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-SecBank-38bdf8)](https://sec-bank-btok.vercel.app)
 
 A backend system that simulates how a real bank's core services work, built specifically to showcase security engineering practices. It is built with **Fastify + TypeScript + PostgreSQL**.
+
+> **Live demo:** https://sec-bank-btok.vercel.app
 
 ## Project Overview
 
