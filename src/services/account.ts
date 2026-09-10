@@ -23,16 +23,6 @@ export async function getAccountById(accountId: string, userId: string) {
   return account;
 }
 
-export async function getAccountByIdAdmin(accountId: string) {
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-    include: { user: { select: { id: true, email: true, name: true } } },
-  });
-
-  if (!account) throw new NotFoundError("Account");
-  return account;
-}
-
 export async function getAllAccounts(limit = 50, offset = 0) {
   const [accounts, total] = await Promise.all([
     prisma.account.findMany({

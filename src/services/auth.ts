@@ -127,14 +127,6 @@ export async function resetPassword(token: string, password: string) {
   return { message: "Password updated successfully." };
 }
 
-export async function revokeSession(refreshToken: string) {
-  const tokenHash = hashToken(refreshToken);
-  await prisma.session.updateMany({
-    where: { tokenHash, isRevoked: false },
-    data: { isRevoked: true, revokedAt: new Date() },
-  });
-}
-
 export async function getActiveSessions(userId: string) {
   return prisma.session.findMany({
     where: { userId, isRevoked: false, expiresAt: { gt: new Date() } },

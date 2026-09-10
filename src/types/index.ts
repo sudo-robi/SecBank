@@ -6,14 +6,12 @@ export type JwtPayload = {
   role: Role;
 };
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  role: Role;
-};
-
 declare module "fastify" {
   interface FastifyRequest {
-    user?: AuthUser;
+    user?: {
+      id: string;
+      email: string;
+      role: Role;
+    };
   }
 }
